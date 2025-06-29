@@ -21,18 +21,28 @@ def download_ncert_pdf(url, save_path):
 
 # --- PDF TEXT EXTRACTION ---
 def extract_text_from_pdf(pdf_path):
-    text = ""
-    with pdfplumber.open(pdf_path) as pdf:
-        for page in pdf.pages:
-            try:
-                with warnings.catch_warnings():
-                    warnings.simplefilter("ignore")
-                    page_text = page.extract_text()
-                if page_text:
-                    text += page_text + "\n"
-            except Exception as e:
-                continue
-    return text
+    import warnings
+    import pdfplumber
+    try:
+        text = ""
+        try:
+            with pdfplumber.open(pdf_path) as pdf:
+                for page in pdf.pages:
+                    try:
+                        with warnings.catch_warnings():
+                            warnings.simplefilter("ignore")
+                            page_text = page.extract_text()
+                        if page_text:
+                            text += page_text + "\n"
+                    except Exception:
+                        continue
+        except Exception:
+            st.error("PDF extraction failed. Please upload a valid PDF file.")
+            return ""
+        return text
+    except Exception:
+        st.error("PDF extraction failed. Please upload a valid PDF file.")
+        return ""
 
 # --- TEXT CHUNKING ---
 def chunk_text(text, chunk_size=500):
@@ -105,7 +115,7 @@ def summarize_text(texts, max_length=20000, min_length=30):
         return f"Summarization failed: {e}"
 
 # --- STREAMLIT UI ---
-st.title("NCERT PDF Uploader & Chapter Summarizer (Local Embeddings & LLM)")
+st.title("NCERT PDF Uploader & Chapter Summarizer (LLM)")
 
 # 1. Download NCERT PDF
 ncert_url = st.text_input("Enter NCERT PDF URL to download:")
@@ -147,7 +157,7 @@ st.header("Describe a Chapter with LLM")
 if not ('qdrant_ready' in st.session_state and st.session_state['qdrant_ready']):
     st.info("Please upload a PDF and click 'Store in Vector DB (Qdrant)' before using this feature.")
 else:
-    chapter_query = st.text_input("Enter chapter name or number to summarize:")
+    chapter_query = st.text_input("Enter chapter name or number or words to summarize:")
     if st.button("Describe Chapter") and chapter_query:
         chapter_texts = search_qdrant(chapter_query)
         summary = summarize_text(chapter_texts, max_length=20000, min_length=30)
