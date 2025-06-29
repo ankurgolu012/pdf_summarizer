@@ -37,11 +37,9 @@ def extract_text_from_pdf(pdf_path):
                     except Exception:
                         continue
         except Exception:
-            st.error("PDF extraction failed. Please upload a valid PDF file.")
             return ""
         return text
     except Exception:
-        st.error("PDF extraction failed. Please upload a valid PDF file.")
         return ""
 
 # --- TEXT CHUNKING ---
